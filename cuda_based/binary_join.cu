@@ -25,7 +25,7 @@ void binaryJoin(const Row* table1, size_t table1Size, const Row* table2,
     cudaMemcpy(d_table2, table2, table2Size * sizeof(Row),
                cudaMemcpyHostToDevice);
 
-    int blockSize = 256;
+    int blockSize = 1;
     int numBlocks = (table1Size + blockSize - 1) / blockSize;
 
     binaryJoinKernel<<<numBlocks, blockSize>>>(d_table1, table1Size, d_table2,
@@ -68,7 +68,7 @@ void binaryJoinWithUnifiedMemory(const Row* h_table1, size_t table1Size,
     memcpy(table1, h_table1, table1Size * sizeof(Row));
     memcpy(table2, h_table2, table2Size * sizeof(Row));
 
-    int blockSize = 256;
+    int blockSize = 1;
     int numBlocks = (table1Size + blockSize - 1) / blockSize;
 
     binaryJoinKernel<<<numBlocks, blockSize>>>(
