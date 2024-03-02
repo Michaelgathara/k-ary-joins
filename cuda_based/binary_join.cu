@@ -1,37 +1,11 @@
-#include <cuda.h>
-#include <cuda_runtime.h>
-
+#include <chrono>
 #include <cstdio>
 #include <iostream>
 
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-
-struct Row {
-    int key;
-    float value;
-};
-
-__global__ void binaryJoinKernel(const Row* table1, size_t table1Size,
-                                 const Row* table2, size_t table2Size,
-                                 Row* resultTable, size_t* resultSize) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (idx >= table1Size) return;
-
-    for (size_t j = 0; j < table2Size; ++j) {
-        if (table1[idx].key == table2[j].key) {
-            int resultIdx = atomicAdd(
-                reinterpret_cast<unsigned long long*>(resultSize), 1ULL);
-            resultTable[resultIdx] = {table1[idx].key,
-                                      table1[idx].value + table2[j].value};
-            break;
-        }
-    }
-}
+#include "binary_kernel.cuh"
 
 void binaryJoin(const Row* table1, size_t table1Size, const Row* table2,
-                       size_t table2Size) {
+                size_t table2Size) {
     Row* d_table1;
     Row* d_table2;
     Row* d_resultTable;
@@ -79,6 +53,41 @@ void binaryJoin(const Row* table1, size_t table1Size, const Row* table2,
     delete[] resultTable;
 }
 
+void binaryJoinWithUnifiedMemory(const Row* h_table1, size_t table1Size,
+                                 const Row* h_table2, size_t table2Size) {
+    Row *table1, *table2, *resultTable;
+    size_t* resultSize;
+
+    cudaMallocManaged(&table1, table1Size * sizeof(Row));
+    cudaMallocManaged(&table2, table2Size * sizeof(Row));
+    cudaMallocManaged(&resultTable, (table1Size + table2Size) * sizeof(Row));
+    cudaMallocManaged(&resultSize, sizeof(size_t));
+
+    *resultSize = 0;
+
+    memcpy(table1, h_table1, table1Size * sizeof(Row));
+    memcpy(table2, h_table2, table2Size * sizeof(Row));
+
+    int blockSize = 256;
+    int numBlocks = (table1Size + blockSize - 1) / blockSize;
+
+    binaryJoinKernel<<<numBlocks, blockSize>>>(
+        table1, table1Size, table2, table2Size, resultTable, resultSize);
+
+    cudaDeviceSynchronize();
+
+    std::cout << "Number of joined rows: " << *resultSize << std::endl;
+    for (size_t i = 0; i < *resultSize; ++i) {
+        std::cout << resultTable[i].key << " " << resultTable[i].value
+                  << std::endl;
+    }
+
+    cudaFree(table1);
+    cudaFree(table2);
+    cudaFree(resultTable);
+    cudaFree(resultSize);
+}
+
 int main() {
     Row table1[] = {{1, 1.5f},   {2, 2.5f},   {3, 3.5f},   {4, 4.5f},
                     {5, 5.5f},   {6, 6.5f},   {7, 7.5f},   {8, 8.5f},
@@ -92,8 +101,28 @@ int main() {
                     {17, 6.5f}, {18, 7.0f}, {19, 7.5f}, {20, 8.0f},
                     {21, 8.5f}, {22, 9.0f}, {23, 9.5f}, {24, 10.0f}};
 
+    auto non_unified_start = std::chrono::steady_clock::now();
+
     binaryJoin(table1, sizeof(table1) / sizeof(Row), table2,
-                      sizeof(table2) / sizeof(Row));
+               sizeof(table2) / sizeof(Row));
+
+    auto non_unified_end = std::chrono::steady_clock::now();
+    auto non_unified_time = non_unified_end - non_unified_start;
+
+    auto unified_start = std::chrono::steady_clock::now();
+
+    binaryJoinWithUnifiedMemory(table1, sizeof(table1) / sizeof(Row), table2,
+                                sizeof(table2) / sizeof(Row));
+
+    auto unified_end = std::chrono::steady_clock::now();
+    auto unified_time = unified_end - unified_start;
+
+    std::cout << "\n\n" << std::endl;
+    std::cout << "Non Unified Memory Time (nanoseconds): " << std::chrono::duration <double, std::nano> (non_unified_time).count() << " ns" << std::endl;
+    std::cout << "Non Unified Memory Time (milliseconds): " << std::chrono::duration <double, std::milli> (non_unified_time).count() << " ms" << std::endl;
+
+    std::cout << "Unified Memory Time (nanoseconds): " << std::chrono::duration <double, std::nano> (unified_time).count() << " ns" << std::endl;
+    std::cout << "Unified Memory Time (milliseconds): " << std::chrono::duration <double, std::milli> (unified_time).count() << " ms" << std::endl;
 
     return 0;
 }
