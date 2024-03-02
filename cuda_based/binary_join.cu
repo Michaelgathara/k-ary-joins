@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "binary_kernel.cuh"
+#include "exception.cuh"
 
 void binaryJoin(const Row* table1, size_t table1Size, const Row* table2,
                 size_t table2Size) {
@@ -22,8 +23,8 @@ void binaryJoin(const Row* table1, size_t table1Size, const Row* table2,
 
     cudaMemcpy(d_table1, table1, table1Size * sizeof(Row),
                cudaMemcpyHostToDevice);
-    cudaMemcpy(d_table2, table2, table2Size * sizeof(Row),
-               cudaMemcpyHostToDevice);
+    checkCuda(cudaMemcpy(d_table2, table2, table2Size * sizeof(Row),
+               cudaMemcpyHostToDevice));
 
     int blockSize = 1;
     int numBlocks = (table1Size + blockSize - 1) / blockSize;
@@ -76,6 +77,7 @@ void binaryJoinWithUnifiedMemory(const Row* h_table1, size_t table1Size,
 
     cudaDeviceSynchronize();
 
+    std::cout << std::endl;
     std::cout << "Number of joined rows: " << *resultSize << std::endl;
     for (size_t i = 0; i < *resultSize; ++i) {
         std::cout << resultTable[i].key << " " << resultTable[i].value
@@ -117,7 +119,7 @@ int main() {
     auto unified_end = std::chrono::steady_clock::now();
     auto unified_time = unified_end - unified_start;
 
-    std::cout << "\n\n" << std::endl;
+    std::cout << "\n" << std::endl;
     std::cout
         << "Non Unified Memory Time (nanoseconds): "
         << std::chrono::duration<double, std::nano>(non_unified_time).count()
@@ -126,7 +128,7 @@ int main() {
         << "Non Unified Memory Time (milliseconds): "
         << std::chrono::duration<double, std::milli>(non_unified_time).count()
         << " ms" << std::endl;
-
+    std::cout << std::endl;
     std::cout << "Unified Memory Time (nanoseconds): "
               << std::chrono::duration<double, std::nano>(unified_time).count()
               << " ns" << std::endl;

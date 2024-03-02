@@ -1,5 +1,4 @@
-#ifndef __BINARY_KERNEL__
-#define __BINARY_KERNEL__
+#pragma once
 
 #include <cuda_runtime.h>
 #include <cuda.h>
@@ -29,5 +28,3 @@ __global__ void binaryJoinKernel(const Row* table1, size_t table1Size,
         }
     }
 }
-
-#endif
