@@ -1,4 +1,4 @@
-from utils import colors
+from utils import *
 # Let's illustrate the concept of binary join and k-ary join using a simple example with Python data structures.
 # We'll simulate joining three tables (A, B, and C) with binary and k-ary approaches.
 
@@ -31,9 +31,11 @@ def k_ary_join(tables, key):
     for table in tables:
         print(f"{colors.OKGREEN} (31) {colors.END} Table: {table}")
         for row in table:
+            print(f"{colors.OKCYAN} (34) {colors.END} Row: {row}")
             row_key = row[key]
             if row_key not in join_map:
                 join_map[row_key] = {}
+                print(f"{colors.WARNING} (38) {colors.END} Join Map: {join_map}")
             join_map[row_key].update(row)
     # Filter out incomplete joins, i.e., rows not present in all tables.
     return [row for row in join_map.values() if all(table in row for table in ['value_A', 'value_B', 'value_C'])]
