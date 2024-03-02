@@ -118,11 +118,21 @@ int main() {
     auto unified_time = unified_end - unified_start;
 
     std::cout << "\n\n" << std::endl;
-    std::cout << "Non Unified Memory Time (nanoseconds): " << std::chrono::duration <double, std::nano> (non_unified_time).count() << " ns" << std::endl;
-    std::cout << "Non Unified Memory Time (milliseconds): " << std::chrono::duration <double, std::milli> (non_unified_time).count() << " ms" << std::endl;
+    std::cout
+        << "Non Unified Memory Time (nanoseconds): "
+        << std::chrono::duration<double, std::nano>(non_unified_time).count()
+        << " ns" << std::endl;
+    std::cout
+        << "Non Unified Memory Time (milliseconds): "
+        << std::chrono::duration<double, std::milli>(non_unified_time).count()
+        << " ms" << std::endl;
 
-    std::cout << "Unified Memory Time (nanoseconds): " << std::chrono::duration <double, std::nano> (unified_time).count() << " ns" << std::endl;
-    std::cout << "Unified Memory Time (milliseconds): " << std::chrono::duration <double, std::milli> (unified_time).count() << " ms" << std::endl;
+    std::cout << "Unified Memory Time (nanoseconds): "
+              << std::chrono::duration<double, std::nano>(unified_time).count()
+              << " ns" << std::endl;
+    std::cout << "Unified Memory Time (milliseconds): "
+              << std::chrono::duration<double, std::milli>(unified_time).count()
+              << " ms" << std::endl;
 
     return 0;
 }
