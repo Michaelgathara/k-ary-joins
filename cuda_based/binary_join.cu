@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <iostream>
 
-#include "binary_kernel.cuh"
+#include "kernels.cuh"
 #include "exception.cuh"
 
 void binaryJoin(const Row* table1, size_t table1Size, const Row* table2,
