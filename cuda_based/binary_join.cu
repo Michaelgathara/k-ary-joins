@@ -21,8 +21,8 @@ void binaryJoin(const Row* table1, size_t table1Size, const Row* table2,
     cudaMemcpy(d_resultSize, &initialResultSize, sizeof(size_t),
                cudaMemcpyHostToDevice);
 
-    cudaMemcpy(d_table1, table1, table1Size * sizeof(Row),
-               cudaMemcpyHostToDevice);
+    checkCuda(cudaMemcpy(d_table1, table1, table1Size * sizeof(Row),
+               cudaMemcpyHostToDevice));
     checkCuda(cudaMemcpy(d_table2, table2, table2Size * sizeof(Row),
                cudaMemcpyHostToDevice));
 
