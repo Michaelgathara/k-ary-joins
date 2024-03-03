@@ -1,4 +1,5 @@
 // authors: Sun et al.
+// Used in the HISA data structure
 #pragma once
 // #include <cuda_runtime.h>
 #include <functional>

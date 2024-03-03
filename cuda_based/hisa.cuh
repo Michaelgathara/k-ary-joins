@@ -41,6 +41,7 @@ struct MEntity {
  * stupid.
  *
  */
+// The HISA data stru
 struct GHashRelContainer {
     // open addressing hashmap for indexing
     MEntity *index_map = nullptr;
